@@ -1,172 +1,590 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flat Duty App</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ForFlatMates — Duty Scheduler</title>
+  <style>
+    :root{
+      --bg:#f7f7f5; --card:#fff; --text:#222; --muted:#666; --line:#e9e9e7;
+      --btn:#111; --btnText:#fff; --btn2:#f0f0ee;
+    }
+    *{box-sizing:border-box}
+    body{margin:0; padding:28px 14px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,Arial; background:var(--bg); color:var(--text);}
+    .wrap{max-width:1100px; margin:0 auto;}
+    header{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-bottom:14px;}
+    h1{margin:0; font-size:22px; font-weight:700; letter-spacing:-0.2px;}
+    .subtitle{color:var(--muted); font-size:13px;}
+    .card{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,0.04); padding:14px; margin-bottom:14px;}
+    .grid{display:grid; grid-template-columns:1.2fr 1fr; gap:12px;}
+    @media (max-width:900px){ .grid{grid-template-columns:1fr;} }
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px;}
+    input, select, button, textarea{
+      width:100%; border:1px solid var(--line); border-radius:12px; padding:10px 12px;
+      font-size:14px; background:#fff; color:var(--text);
+    }
+    textarea{min-height:52px; resize:vertical;}
+    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    .row3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;}
+    @media (max-width:700px){ .row, .row3{grid-template-columns:1fr;} }
+    .btns{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;}
+    button{cursor:pointer}
+    .primary{background:var(--btn); color:var(--btnText); border-color:var(--btn);}
+    .secondary{background:var(--btn2);}
+    .tiny{font-size:12px; padding:8px 10px; border-radius:10px; width:auto}
+    .pill{display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);}
+    .pill input{width:auto}
+    .tabs{display:flex; gap:8px; flex-wrap:wrap}
+    .tab{width:auto; padding:8px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; font-size:13px;}
+    .tab.active{background:var(--btn); color:var(--btnText); border-color:var(--btn);}
+    table{width:100%; border-collapse:collapse; overflow:hidden; border-radius:12px; border:1px solid var(--line);}
+    th,td{padding:10px 10px; border-bottom:1px solid var(--line); text-align:center; font-size:13px;}
+    th{background:#fbfbfa; color:#333; font-weight:650;}
+    tr:hover td{background:#fafaf8}
+    .muted{color:var(--muted); font-size:12px;}
+    .right{display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap}
 
-<style>
-body {
-  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
-  background:#f7f7f5;
-  margin:0;
-  padding:40px;
-  color:#222;
-}
-h1 { font-weight:600; }
-.card {
-  background:white;
-  padding:20px;
-  border-radius:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.05);
-  margin-bottom:20px;
-}
-input, button {
-  padding:8px 12px;
-  margin:6px 0;
-  border-radius:8px;
-  border:1px solid #ddd;
-}
-button {
-  background:#111;
-  color:white;
-  cursor:pointer;
-}
-button.secondary {
-  background:#eee;
-  color:#111;
-}
-table {
-  width:100%;
-  border-collapse:collapse;
-}
-th, td {
-  padding:10px;
-  text-align:center;
-}
-th {
-  border-bottom:2px solid #eee;
-}
-tr:hover {
-  background:#fafafa;
-}
-.swap-btn {
-  background:#eee;
-  color:#111;
-  padding:4px 8px;
-  font-size:12px;
-}
-</style>
+    /* Calendar */
+    .cal-year{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
+    .cal-year h2{margin:0; font-size:16px;}
+    .months{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px;}
+    @media (max-width:1000px){ .months{grid-template-columns:repeat(2, 1fr);} }
+    @media (max-width:650px){ .months{grid-template-columns:1fr;} }
+    .month{border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#fff;}
+    .month-head{padding:10px 12px; background:#fbfbfa; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;}
+    .month-title{font-weight:700; font-size:13px;}
+    .dow{display:grid; grid-template-columns:repeat(7, 1fr); gap:0; padding:6px 8px; font-size:11px; color:var(--muted);}
+    .days{display:grid; grid-template-columns:repeat(7, 1fr); gap:0; padding:0 8px 8px;}
+    .cell{min-height:62px; border-radius:10px; padding:6px; margin:2px 0; border:1px solid transparent;}
+    .cell.out{opacity:.35}
+    .cell .d{font-size:11px; color:var(--muted); margin-bottom:4px;}
+    .ev{font-size:11px; line-height:1.25; padding:6px; border-radius:10px; border:1px solid var(--line); background:#fcfcfb; text-align:left;}
+    .ev b{font-weight:750}
+    .ev .swapline{margin-top:6px; display:flex; justify-content:flex-end;}
+    .ev button{width:auto; padding:6px 8px; border-radius:10px; border:1px solid var(--line); background:var(--btn2); font-size:11px;}
+  </style>
 </head>
-
 <body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>🧹 ForFlatMates</h1>
+      <div class="subtitle">설정 → 스케줄 생성 → 공유 URL / 캘린더(.ics)로 끝</div>
+    </div>
+    <div class="right">
+      <button class="tiny secondary" id="copyLinkBtn">링크 복사</button>
+      <button class="tiny secondary" id="downloadIcsBtn">.ics 다운로드</button>
+    </div>
+  </header>
 
-<h1>🧹 Flat Duty Web App</h1>
+  <div class="card grid">
+    <div>
+      <label>사람들 (쉼표로 구분)</label>
+      <textarea id="peopleInput">Angel, Althea, Ahmed, Sofia, Bin</textarea>
 
-<div class="card">
-<label>People (comma separated)</label><br>
-<input id="peopleInput" style="width:100%" value="Angel,Althea,Ahmed,Sofia,Bin"><br>
+      <label style="margin-top:10px;">듀티/역할 (쉼표로 구분, 예: MOP,CLEAN / TRASH,BATHROOM ...)</label>
+      <input id="rolesInput" value="MOP, CLEAN" />
 
-<label>Roles (comma separated)</label><br>
-<input id="rolesInput" style="width:100%" value="MOP,CLEAN"><br>
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>시작 날짜</label>
+          <input type="date" id="startDate" />
+        </div>
+        <div>
+          <label>생성 개수 (몇 번 발생시키기)</label>
+          <input type="number" id="occurrences" min="1" value="30" />
+        </div>
+      </div>
 
-<label>Weeks</label><br>
-<input id="weeksInput" type="number" value="20"><br>
+      <div class="row3" style="margin-top:10px;">
+        <div>
+          <label>간격</label>
+          <input type="number" id="intervalValue" min="1" value="1" />
+        </div>
+        <div>
+          <label>단위</label>
+          <select id="intervalUnit">
+            <option value="days">n일에 한 번</option>
+            <option value="weeks" selected>n주에 한 번</option>
+            <option value="months">n달에 한 번</option>
+          </select>
+        </div>
+        <div>
+          <label>한 번에 뽑을 인원</label>
+          <input type="number" id="peoplePerDuty" min="1" value="2" />
+        </div>
+      </div>
 
-<button onclick="generate()">Generate</button>
-<button class="secondary" onclick="copyLink()">Copy Share Link</button>
-</div>
+      <div class="btns">
+        <label class="pill"><input type="checkbox" id="noConsecutive" checked />연속(바로 다음 회차) 당번 금지</label>
+        <label class="pill"><input type="checkbox" id="show2026" checked />2026 캘린더 뷰 표시</label>
+      </div>
 
-<div class="card">
-<table id="scheduleTable">
-<thead></thead>
-<tbody></tbody>
-</table>
+      <div class="btns">
+        <button class="primary" id="generateBtn">스케줄 생성</button>
+        <button class="secondary" id="resetBtn">초기화</button>
+      </div>
+
+      <div class="muted" style="margin-top:8px;">
+        * “연속 금지”는 같은 사람이 <b>바로 다음 회차</b>에 또 걸리는 걸 막아줘.<br/>
+        * 캘린더(.ics)는 Google Calendar에서 “가져오기”로 넣으면 돼.
+      </div>
+    </div>
+
+    <div>
+      <div class="tabs">
+        <button class="tab active" id="tabTable">표</button>
+        <button class="tab" id="tabCalendar">2026 캘린더</button>
+      </div>
+
+      <div id="viewTable" style="margin-top:10px;">
+        <div class="muted">각 행에서 Swap을 누르면 그 회차 역할이 서로 바뀌고, 변경이 링크에 저장돼.</div>
+        <div style="margin-top:10px; overflow:auto;">
+          <table id="scheduleTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="viewCalendar" style="margin-top:10px; display:none;">
+        <div class="muted">2026년 달력에 이벤트가 박혀서 보여. (표시일 = 각 회차 날짜)</div>
+        <div id="calendar2026" style="margin-top:10px;"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-
-let state = {
-  people: [],
-  roles: [],
-  weeks: 20,
+/** ---------------------------
+ * State + URL share
+ * --------------------------*/
+const DEFAULT_STATE = () => ({
+  people: ["Angel","Althea","Ahmed","Sofia","Bin"],
+  roles: ["MOP","CLEAN"],
+  startDate: null,                 // "YYYY-MM-DD"
+  occurrences: 30,
+  intervalValue: 1,
+  intervalUnit: "weeks",           // "days" | "weeks" | "months"
+  peoplePerDuty: 2,
+  noConsecutive: true,
+  show2026: true,
+  // schedule items: { idx, date:"YYYY-MM-DD", assigned:["A","B",...], swapped:false }
   schedule: []
-};
+});
 
-function generate() {
-  state.people = document.getElementById("peopleInput").value.split(",").map(x=>x.trim());
-  state.roles = document.getElementById("rolesInput").value.split(",").map(x=>x.trim());
-  state.weeks = parseInt(document.getElementById("weeksInput").value);
+let state = DEFAULT_STATE();
 
-  state.schedule = [];
-  let counts = {};
-  state.people.forEach(p=>counts[p]=0);
-
-  for (let i=0;i<state.weeks;i++){
-    let sorted = [...state.people].sort((a,b)=>counts[a]-counts[b]);
-    let assigned = sorted.slice(0,state.roles.length);
-    assigned.forEach(p=>counts[p]++);
-    state.schedule.push(assigned);
+function encodeState(obj){
+  const json = JSON.stringify(obj);
+  // URL-safe base64
+  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function decodeState(s){
+  const pad = '='.repeat((4 - (s.length % 4)) % 4);
+  const b64 = (s + pad).replace(/-/g,'+').replace(/_/g,'/');
+  const json = decodeURIComponent(escape(atob(b64)));
+  return JSON.parse(json);
+}
+function syncToURL(){
+  const data = encodeState(state);
+  const url = new URL(window.location.href);
+  url.searchParams.set("data", data);
+  history.replaceState(null, "", url.toString());
+}
+function loadFromURL(){
+  const url = new URL(window.location.href);
+  const data = url.searchParams.get("data");
+  if (!data) return false;
+  try {
+    state = decodeState(data);
+    return true;
+  } catch {
+    return false;
   }
-
-  render();
-  updateURL();
 }
 
-function render(){
-  const thead = document.querySelector("#scheduleTable thead");
-  const tbody = document.querySelector("#scheduleTable tbody");
+/** ---------------------------
+ * Date helpers
+ * --------------------------*/
+function isoTodayLocal(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function parseISO(iso){
+  // local midnight
+  const [y,m,dd] = iso.split("-").map(Number);
+  return new Date(y, m-1, dd, 0,0,0,0);
+}
+function toISO(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function addInterval(date, value, unit){
+  const d = new Date(date);
+  if (unit === "days") d.setDate(d.getDate() + value);
+  else if (unit === "weeks") d.setDate(d.getDate() + value*7);
+  else if (unit === "months") d.setMonth(d.getMonth() + value);
+  return d;
+}
+
+/** ---------------------------
+ * Scheduler
+ * - fair-ish: least assignments first
+ * - noConsecutive: exclude previous occurrence assignees
+ * --------------------------*/
+function generateSchedule(){
+  const people = state.people.slice();
+  const roles = state.roles.slice();
+  const per = Math.max(1, Math.min(state.peoplePerDuty, roles.length, people.length));
+  const start = parseISO(state.startDate);
+  const counts = Object.fromEntries(people.map(p => [p, 0]));
+
+  let lastAssigned = new Set();
+  const schedule = [];
+
+  for (let i=0; i<state.occurrences; i++){
+    const date = addInterval(start, i*state.intervalValue, state.intervalUnit);
+
+    // candidates
+    let candidates = people.slice();
+    if (state.noConsecutive) candidates = candidates.filter(p => !lastAssigned.has(p));
+    // if too strict (e.g. very small people), fallback to full list
+    if (candidates.length < per) candidates = people.slice();
+
+    // sort by least count then stable by name
+    candidates.sort((a,b) => (counts[a]-counts[b]) || a.localeCompare(b));
+
+    const chosen = candidates.slice(0, per);
+    chosen.forEach(p => counts[p]++);
+
+    schedule.push({
+      idx: i,
+      date: toISO(date),
+      assigned: chosen.concat(Array(Math.max(0, roles.length - chosen.length)).fill("-")),
+    });
+
+    lastAssigned = new Set(chosen);
+  }
+
+  state.schedule = schedule;
+}
+
+/** ---------------------------
+ * UI render
+ * --------------------------*/
+const els = {
+  peopleInput: document.getElementById("peopleInput"),
+  rolesInput: document.getElementById("rolesInput"),
+  startDate: document.getElementById("startDate"),
+  occurrences: document.getElementById("occurrences"),
+  intervalValue: document.getElementById("intervalValue"),
+  intervalUnit: document.getElementById("intervalUnit"),
+  peoplePerDuty: document.getElementById("peoplePerDuty"),
+  noConsecutive: document.getElementById("noConsecutive"),
+  show2026: document.getElementById("show2026"),
+  generateBtn: document.getElementById("generateBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  copyLinkBtn: document.getElementById("copyLinkBtn"),
+  downloadIcsBtn: document.getElementById("downloadIcsBtn"),
+
+  tabTable: document.getElementById("tabTable"),
+  tabCalendar: document.getElementById("tabCalendar"),
+  viewTable: document.getElementById("viewTable"),
+  viewCalendar: document.getElementById("viewCalendar"),
+
+  table: document.getElementById("scheduleTable"),
+  calWrap: document.getElementById("calendar2026"),
+};
+
+function hydrateForm(){
+  els.peopleInput.value = state.people.join(", ");
+  els.rolesInput.value = state.roles.join(", ");
+  els.startDate.value = state.startDate || isoTodayLocal();
+  els.occurrences.value = state.occurrences;
+  els.intervalValue.value = state.intervalValue;
+  els.intervalUnit.value = state.intervalUnit;
+  els.peoplePerDuty.value = state.peoplePerDuty;
+  els.noConsecutive.checked = !!state.noConsecutive;
+  els.show2026.checked = !!state.show2026;
+}
+
+function readForm(){
+  const people = els.peopleInput.value.split(",").map(s=>s.trim()).filter(Boolean);
+  const roles = els.rolesInput.value.split(",").map(s=>s.trim()).filter(Boolean);
+  if (people.length < 1) return alert("사람을 1명 이상 입력해줘!");
+  if (roles.length < 1) return alert("듀티/역할을 1개 이상 입력해줘!");
+
+  state.people = people;
+  state.roles = roles;
+  state.startDate = els.startDate.value || isoTodayLocal();
+  state.occurrences = Math.max(1, parseInt(els.occurrences.value || "1", 10));
+  state.intervalValue = Math.max(1, parseInt(els.intervalValue.value || "1", 10));
+  state.intervalUnit = els.intervalUnit.value;
+  state.peoplePerDuty = Math.max(1, parseInt(els.peoplePerDuty.value || "1", 10));
+  state.noConsecutive = els.noConsecutive.checked;
+  state.show2026 = els.show2026.checked;
+}
+
+function renderTable(){
+  const roles = state.roles;
+  const thead = els.table.querySelector("thead");
+  const tbody = els.table.querySelector("tbody");
   thead.innerHTML = "";
   tbody.innerHTML = "";
 
-  let header = "<tr><th>Week</th>";
-  state.roles.forEach(r=> header += `<th>${r}</th>`);
-  header += "<th>Swap</th></tr>";
-  thead.innerHTML = header;
+  const h = document.createElement("tr");
+  h.innerHTML = `<th>#</th><th>날짜</th>` + roles.map(r=>`<th>${escapeHtml(r)}</th>`).join("") + `<th>Swap</th>`;
+  thead.appendChild(h);
 
-  state.schedule.forEach((week, index)=>{
-    let row = `<tr><td>${index+1}</td>`;
-    week.forEach(p=> row += `<td>${p}</td>`);
-    row += `<td><button class="swap-btn" onclick="swap(${index})">Swap</button></td></tr>`;
-    tbody.innerHTML += row;
+  state.schedule.forEach(item => {
+    const tr = document.createElement("tr");
+    const cells = item.assigned.slice(0, roles.length);
+    tr.innerHTML =
+      `<td>${item.idx + 1}</td>` +
+      `<td>${item.date}</td>` +
+      cells.map(p=>`<td>${escapeHtml(p)}</td>`).join("") +
+      `<td><button class="tiny secondary" data-swap="${item.idx}">Swap</button></td>`;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll("button[data-swap]").forEach(btn=>{
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.getAttribute("data-swap"), 10);
+      swapRolesAt(idx);
+    });
   });
 }
 
-function swap(index){
-  if (state.schedule[index].length >= 2){
-    let tmp = state.schedule[index][0];
-    state.schedule[index][0] = state.schedule[index][1];
-    state.schedule[index][1] = tmp;
+function swapRolesAt(idx){
+  const rolesLen = state.roles.length;
+  const item = state.schedule.find(x => x.idx === idx);
+  if (!item) return;
+  if (rolesLen < 2) return;
+
+  // swap first two roles (MOP<->CLEAN 같은 케이스)
+  const a0 = item.assigned[0];
+  const a1 = item.assigned[1];
+  item.assigned[0] = a1;
+  item.assigned[1] = a0;
+
+  syncToURL();
+  renderTable();
+  if (state.show2026) renderCalendar2026();
+}
+
+/** ---------------------------
+ * 2026 Calendar (month grid)
+ * - mark events that fall in 2026
+ * --------------------------*/
+const DOW = ["일","월","화","수","목","금","토"];
+
+function renderCalendar2026(){
+  els.calWrap.innerHTML = "";
+
+  const eventsMap = new Map(); // "YYYY-MM-DD" -> item
+  state.schedule.forEach(it => {
+    if (it.date.startsWith("2026-")) eventsMap.set(it.date, it);
+  });
+
+  const container = document.createElement("div");
+  container.className = "months";
+
+  for (let month=0; month<12; month++){
+    const monthBox = document.createElement("div");
+    monthBox.className = "month";
+
+    const head = document.createElement("div");
+    head.className = "month-head";
+    head.innerHTML = `<div class="month-title">2026년 ${month+1}월</div><div class="muted">${DOW.join(" ")}</div>`;
+    monthBox.appendChild(head);
+
+    const dow = document.createElement("div");
+    dow.className = "dow";
+    DOW.forEach(d => {
+      const s = document.createElement("div");
+      s.textContent = d;
+      dow.appendChild(s);
+    });
+    monthBox.appendChild(dow);
+
+    const days = document.createElement("div");
+    days.className = "days";
+
+    const first = new Date(2026, month, 1);
+    const firstDow = first.getDay(); // 0=Sun
+    const start = new Date(2026, month, 1 - firstDow); // start from Sunday of first week grid
+
+    for (let i=0; i<42; i++){
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+
+      const iso = toISO(d);
+      const cell = document.createElement("div");
+      cell.className = "cell" + (d.getMonth() !== month ? " out" : "");
+
+      const top = document.createElement("div");
+      top.className = "d";
+      top.textContent = String(d.getDate());
+      cell.appendChild(top);
+
+      const it = eventsMap.get(iso);
+      if (it && d.getMonth() === month){
+        const ev = document.createElement("div");
+        ev.className = "ev";
+        const rolesLen = state.roles.length;
+        const lines = [];
+        for (let r=0; r<rolesLen; r++){
+          lines.push(`<b>${escapeHtml(state.roles[r])}</b>: ${escapeHtml(it.assigned[r] ?? "-")}`);
+        }
+        ev.innerHTML = lines.join("<br/>") + `<div class="swapline"><button data-swapcal="${it.idx}">Swap</button></div>`;
+        cell.appendChild(ev);
+      }
+
+      days.appendChild(cell);
+    }
+
+    monthBox.appendChild(days);
+    container.appendChild(monthBox);
   }
-  render();
-  updateURL();
+
+  els.calWrap.appendChild(container);
+
+  els.calWrap.querySelectorAll("button[data-swapcal]").forEach(btn=>{
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.getAttribute("data-swapcal"), 10);
+      swapRolesAt(idx);
+    });
+  });
 }
 
-function updateURL(){
-  const encoded = btoa(JSON.stringify(state));
-  history.replaceState(null,null,"?data="+encoded);
+/** ---------------------------
+ * Tabs
+ * --------------------------*/
+function setTab(which){
+  const isTable = which === "table";
+  els.tabTable.classList.toggle("active", isTable);
+  els.tabCalendar.classList.toggle("active", !isTable);
+  els.viewTable.style.display = isTable ? "" : "none";
+  els.viewCalendar.style.display = isTable ? "none" : "";
 }
 
-function loadFromURL(){
-  const params = new URLSearchParams(window.location.search);
-  if(params.get("data")){
-    const decoded = JSON.parse(atob(params.get("data")));
-    state = decoded;
-    document.getElementById("peopleInput").value = state.people.join(",");
-    document.getElementById("rolesInput").value = state.roles.join(",");
-    document.getElementById("weeksInput").value = state.weeks;
-    render();
+/** ---------------------------
+ * ICS export
+ * - all-day event on the occurrence date
+ * --------------------------*/
+function formatICSDate(iso){
+  // YYYYMMDD
+  return iso.replaceAll("-", "");
+}
+function downloadICS(){
+  if (!state.schedule.length) return alert("먼저 스케줄을 생성해줘!");
+
+  const lines = [];
+  lines.push("BEGIN:VCALENDAR");
+  lines.push("VERSION:2.0");
+  lines.push("PRODID:-//ForFlatMates//Duty Scheduler//KO");
+
+  state.schedule.forEach(it => {
+    const dt = formatICSDate(it.date);
+    const uid = `forflatmates-${dt}-${it.idx}@local`;
+    const rolesLen = state.roles.length;
+
+    let desc = "";
+    for (let r=0; r<rolesLen; r++){
+      desc += `${state.roles[r]}: ${it.assigned[r] ?? "-"}\\n`;
+    }
+    desc += `\\nGenerated by ForFlatMates`;
+
+    lines.push("BEGIN:VEVENT");
+    lines.push(`UID:${uid}`);
+    lines.push(`DTSTART;VALUE=DATE:${dt}`);
+    // DTEND is next day for all-day; required by many clients
+    const next = toISO(addInterval(parseISO(it.date), 1, "days"));
+    lines.push(`DTEND;VALUE=DATE:${formatICSDate(next)}`);
+    lines.push(`SUMMARY:🧹 Duty`);
+    lines.push(`DESCRIPTION:${escapeICSText(desc)}`);
+    lines.push("END:VEVENT");
+  });
+
+  lines.push("END:VCALENDAR");
+
+  const blob = new Blob([lines.join("\n")], {type:"text/calendar;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "forflatmates_duty.ics";
+  a.click();
+}
+
+/** ---------------------------
+ * Utilities
+ * --------------------------*/
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function escapeICSText(s){
+  // basic ICS escaping
+  return String(s).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+
+/** ---------------------------
+ * Wire up
+ * --------------------------*/
+function applyStateToUIAndRender(){
+  hydrateForm();
+  if (!state.startDate) state.startDate = isoTodayLocal();
+  if (!state.schedule?.length){
+    generateSchedule();
   }
+  renderTable();
+  if (state.show2026) renderCalendar2026();
+  syncToURL();
 }
 
-function copyLink(){
-  navigator.clipboard.writeText(window.location.href);
-  alert("Link copied!");
-}
+els.generateBtn.addEventListener("click", () => {
+  readForm();
+  generateSchedule();
+  renderTable();
+  if (state.show2026) renderCalendar2026();
+  syncToURL();
+});
 
-loadFromURL();
+els.resetBtn.addEventListener("click", () => {
+  state = DEFAULT_STATE();
+  state.startDate = isoTodayLocal();
+  generateSchedule();
+  applyStateToUIAndRender();
+});
 
+els.copyLinkBtn.addEventListener("click", async () => {
+  syncToURL();
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    alert("공유 링크 복사 완료!");
+  } catch {
+    prompt("아래 링크를 복사해줘:", window.location.href);
+  }
+});
+
+els.downloadIcsBtn.addEventListener("click", downloadICS);
+
+els.tabTable.addEventListener("click", () => setTab("table"));
+els.tabCalendar.addEventListener("click", () => setTab("calendar"));
+
+els.show2026.addEventListener("change", () => {
+  state.show2026 = els.show2026.checked;
+  syncToURL();
+  if (state.show2026) renderCalendar2026();
+});
+
+(function init(){
+  const loaded = loadFromURL();
+  if (!loaded){
+    state.startDate = isoTodayLocal();
+    generateSchedule();
+    syncToURL();
+  }
+  applyStateToUIAndRender();
+})();
 </script>
-
 </body>
 </html>
