@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flat Duty App</title>
+
+<style>
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:#f7f7f5;
+  margin:0;
+  padding:40px;
+  color:#222;
+}
+h1 { font-weight:600; }
+.card {
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom:20px;
+}
+input, button {
+  padding:8px 12px;
+  margin:6px 0;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+button {
+  background:#111;
+  color:white;
+  cursor:pointer;
+}
+button.secondary {
+  background:#eee;
+  color:#111;
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+}
+th, td {
+  padding:10px;
+  text-align:center;
+}
+th {
+  border-bottom:2px solid #eee;
+}
+tr:hover {
+  background:#fafafa;
+}
+.swap-btn {
+  background:#eee;
+  color:#111;
+  padding:4px 8px;
+  font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🧹 Flat Duty Web App</h1>
+
+<div class="card">
+<label>People (comma separated)</label><br>
+<input id="peopleInput" style="width:100%" value="Angel,Althea,Ahmed,Sofia,Bin"><br>
+
+<label>Roles (comma separated)</label><br>
+<input id="rolesInput" style="width:100%" value="MOP,CLEAN"><br>
+
+<label>Weeks</label><br>
+<input id="weeksInput" type="number" value="20"><br>
+
+<button onclick="generate()">Generate</button>
+<button class="secondary" onclick="copyLink()">Copy Share Link</button>
+</div>
+
+<div class="card">
+<table id="scheduleTable">
+<thead></thead>
+<tbody></tbody>
+</table>
+</div>
+
+<script>
+
+let state = {
+  people: [],
+  roles: [],
+  weeks: 20,
+  schedule: []
+};
+
+function generate() {
+  state.people = document.getElementById("peopleInput").value.split(",").map(x=>x.trim());
+  state.roles = document.getElementById("rolesInput").value.split(",").map(x=>x.trim());
+  state.weeks = parseInt(document.getElementById("weeksInput").value);
+
+  state.schedule = [];
+  let counts = {};
+  state.people.forEach(p=>counts[p]=0);
+
+  for (let i=0;i<state.weeks;i++){
+    let sorted = [...state.people].sort((a,b)=>counts[a]-counts[b]);
+    let assigned = sorted.slice(0,state.roles.length);
+    assigned.forEach(p=>counts[p]++);
+    state.schedule.push(assigned);
+  }
+
+  render();
+  updateURL();
+}
+
+function render(){
+  const thead = document.querySelector("#scheduleTable thead");
+  const tbody = document.querySelector("#scheduleTable tbody");
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+  let header = "<tr><th>Week</th>";
+  state.roles.forEach(r=> header += `<th>${r}</th>`);
+  header += "<th>Swap</th></tr>";
+  thead.innerHTML = header;
+
+  state.schedule.forEach((week, index)=>{
+    let row = `<tr><td>${index+1}</td>`;
+    week.forEach(p=> row += `<td>${p}</td>`);
+    row += `<td><button class="swap-btn" onclick="swap(${index})">Swap</button></td></tr>`;
+    tbody.innerHTML += row;
+  });
+}
+
+function swap(index){
+  if (state.schedule[index].length >= 2){
+    let tmp = state.schedule[index][0];
+    state.schedule[index][0] = state.schedule[index][1];
+    state.schedule[index][1] = tmp;
+  }
+  render();
+  updateURL();
+}
+
+function updateURL(){
+  const encoded = btoa(JSON.stringify(state));
+  history.replaceState(null,null,"?data="+encoded);
+}
+
+function loadFromURL(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get("data")){
+    const decoded = JSON.parse(atob(params.get("data")));
+    state = decoded;
+    document.getElementById("peopleInput").value = state.people.join(",");
+    document.getElementById("rolesInput").value = state.roles.join(",");
+    document.getElementById("weeksInput").value = state.weeks;
+    render();
+  }
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(window.location.href);
+  alert("Link copied!");
+}
+
+loadFromURL();
+
+</script>
+
+</body>
+</html>
